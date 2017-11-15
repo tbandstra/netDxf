@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: AssemblyTitle("netDxf")]
+[assembly: AssemblyTitle("netDxf (zelf aangepast op 15-11-2017)")]
 [assembly: AssemblyDescription(".net Dxf Reader-Writer")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
@@ -58,6 +58,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("2.0.3.0")]
-[assembly: AssemblyFileVersion("2.0.3.0")]
+[assembly: AssemblyVersion("2.0.3.1")]
+[assembly: AssemblyFileVersion("2.0.3.1")]
 [assembly: CLSCompliant(true)]
