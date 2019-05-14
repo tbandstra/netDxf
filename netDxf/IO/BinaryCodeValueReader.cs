@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,10 +31,16 @@ namespace netDxf.IO
     internal class BinaryCodeValueReader :
         ICodeValueReader
     {
+        #region private fields
+
         private readonly BinaryReader reader;
         private readonly Encoding encoding;
         private short code;
         private object value;
+
+        #endregion
+
+        #region constructors
 
         public BinaryCodeValueReader(BinaryReader reader, Encoding encoding)
         {
@@ -47,11 +53,15 @@ namespace netDxf.IO
                 sb.Append((char) sentinel[i]);
             }
             if (sb.ToString() != "AutoCAD Binary DXF")
-                throw new ArgumentException("Not a valid binary dxf.");
+                throw new ArgumentException("Not a valid binary DXF.");
 
             this.code = 0;
             this.value = null;
         }
+
+        #endregion
+
+        #region public properties
 
         public short Code
         {
@@ -67,6 +77,10 @@ namespace netDxf.IO
         {
             get { return this.reader.BaseStream.Position; }
         }
+
+        #endregion
+
+        #region public methods
 
         public void Next()
         {
@@ -88,7 +102,7 @@ namespace netDxf.IO
             else if (this.code == 102) // string (255-character maximum; less for Unicode strings)
                 this.value = this.NullTerminatedString();
             else if (this.code == 105) // string representing hexadecimal (hex) handle value
-                this.value = this.NullTerminatedString();
+                this.value = this.ReadHex(this.NullTerminatedString());
             else if (this.code >= 110 && this.code <= 119) // double precision floating point value
                 this.value = this.reader.ReadDouble();
             else if (this.code >= 120 && this.code <= 129) // double precision floating point value
@@ -108,21 +122,21 @@ namespace netDxf.IO
             else if (this.code >= 280 && this.code <= 289) // 16-bit integer value
                 this.value = this.reader.ReadInt16();
             else if (this.code >= 290 && this.code <= 299) // byte (boolean flag value)
-                this.value = this.reader.ReadByte();
+                this.value = this.reader.ReadByte() > 0;
             else if (this.code >= 300 && this.code <= 309) // arbitrary text string
                 this.value = this.NullTerminatedString();
             else if (this.code >= 310 && this.code <= 319) // string representing hex value of binary chunk
                 this.value = this.ReadBinaryData();
             else if (this.code >= 320 && this.code <= 329) // string representing hex handle value
-                this.value = this.NullTerminatedString();
+                this.value = this.ReadHex(this.NullTerminatedString());
             else if (this.code >= 330 && this.code <= 369) // string representing hex object IDs
-                this.value = this.NullTerminatedString();
+                this.value = this.ReadHex(this.NullTerminatedString());
             else if (this.code >= 370 && this.code <= 379) // 16-bit integer value
                 this.value = this.reader.ReadInt16();
             else if (this.code >= 380 && this.code <= 389) // 16-bit integer value
                 this.value = this.reader.ReadInt16();
             else if (this.code >= 390 && this.code <= 399) // string representing hex handle value
-                this.value = this.NullTerminatedString();
+                this.value = this.ReadHex(this.NullTerminatedString());
             else if (this.code >= 400 && this.code <= 409) // 16-bit integer value
                 this.value = this.reader.ReadInt16();
             else if (this.code >= 410 && this.code <= 419) // string
@@ -140,7 +154,7 @@ namespace netDxf.IO
             else if (this.code >= 470 && this.code <= 479) // string
                 this.value = this.NullTerminatedString();
             else if (this.code >= 480 && this.code <= 481) // string representing hex handle value
-                this.value = this.NullTerminatedString();
+                this.value = this.ReadHex(this.NullTerminatedString());
             else if (this.code == 999) // comment (string)
                 throw new Exception(string.Format("The comment group, 999, is not used in binary DXF files at byte address {0}", this.reader.BaseStream.Position));
             else if (this.code >= 1010 && this.code <= 1059) // double-precision floating-point value
@@ -158,6 +172,59 @@ namespace netDxf.IO
             else
                 throw new Exception(string.Format("Code {0} not valid at byte address {1}", this.code, this.reader.BaseStream.Position));
         }
+
+        public byte ReadByte()
+        {
+            return (byte)this.value;
+        }
+
+        public byte[] ReadBytes()
+        {
+            return (byte[])this.value;
+        }
+
+        public short ReadShort()
+        {
+            return (short)this.value;
+        }
+
+        public int ReadInt()
+        {
+            return (int)this.value;
+        }
+
+        public long ReadLong()
+        {
+            return (long)this.value;
+        }
+
+        public bool ReadBool()
+        {
+            return (bool)this.value;
+        }
+
+        public double ReadDouble()
+        {
+            return (double)this.value;
+        }
+
+        public string ReadString()
+        {
+            return (string)this.value;
+        }
+
+        public string ReadHex()
+        {
+            return (string)this.value;        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}:{1}", this.code, this.value);
+        }
+
+        #endregion
+
+        #region private methods
 
         private byte[] ReadBinaryData()
         {
@@ -177,59 +244,15 @@ namespace netDxf.IO
             return this.encoding.GetString(bytes.ToArray(), 0, bytes.Count);
         }
 
-        public byte ReadByte()
-        {
-            return (byte) this.value;
-        }
-
-        public byte[] ReadBytes()
-        {
-            return (byte[]) this.value;
-        }
-
-        public short ReadShort()
-        {
-            return (short) this.value;
-        }
-
-        public int ReadInt()
-        {
-            return (int) this.value;
-        }
-
-        public long ReadLong()
-        {
-            return (long) this.value;
-        }
-
-        public bool ReadBool()
-        {
-            byte result = this.ReadByte();
-            return result > 0;
-        }
-
-        public double ReadDouble()
-        {
-            return (double) this.value;
-        }
-
-        public string ReadString()
-        {
-            return (string) this.value;
-        }
-
-        public string ReadHex()
+        private string ReadHex(string hex)
         {
             long test;
-            if (long.TryParse((string) this.value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))
+            if (long.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))
                 return test.ToString("X");
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", this.value, this.CurrentPosition));
+            throw new Exception(string.Format("Value {0} not valid at line {1}", hex, this.CurrentPosition));
         }
 
-        public override string ToString()
-        {
-            return string.Format("{0}:{1}", this.code, this.value);
-        }
+        #endregion       
     }
 }
