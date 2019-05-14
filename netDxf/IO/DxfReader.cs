@@ -8814,8 +8814,13 @@ namespace netDxf.IO
             foreach (Dimension dim in this.doc.Dimensions)
             {
                 XData xDataOverrides;
-                if (dim.XData.TryGetValue(ApplicationRegistry.DefaultName, out xDataOverrides))
-                    dim.StyleOverrides.AddRange(this.ReadDimensionStyleOverrideXData(xDataOverrides, dim));
+                try
+                {
+                    if (dim.XData.TryGetValue(ApplicationRegistry.DefaultName, out xDataOverrides))
+                        dim.StyleOverrides.AddRange(this.ReadDimensionStyleOverrideXData(xDataOverrides, dim));
+                } catch (Exception exception)
+                {
+                }
             }
             foreach (Leader leader in this.doc.Leaders)
             {
